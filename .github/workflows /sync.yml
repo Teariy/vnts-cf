@@ -1,0 +1,51 @@
+name: 自动同步上游代码
+
+permissions:
+  contents: write
+  actions: write
+
+on:
+  # 定时触发：每天 UTC 时间 0 点自动同步一次
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync_latest_from_upstream:
+    name: 同步最新代码
+    runs-on: ubuntu-latest
+
+    # 仅当当前仓库是 Fork 仓库时才执行
+    if: ${{ github.event.repository.fork }}
+
+    steps:
+      - name: 拉取当前仓库代码
+        uses: actions/checkout@v5
+        
+      - name: 删除流程记录
+        uses: Mattraks/delete-workflow-runs@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          retain_days: 1
+          keep_minimum_runs: 0
+
+      - name: 同步上游仓库代码
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
+        with:
+          # 上游仓库地址（原始仓库）
+          upstream_sync_repo: lmq8267/vnts-cf
+          # 上游仓库分支
+          upstream_sync_branch: master
+          # 当前 Fork 仓库需要同步的分支
+          target_sync_branch: master
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          # 是否启用测试模式（true 仅测试，不真正同步）
+          test_mode: false
+
+      - name: 同步失败
+        if: failure()
+        run: |
+          echo "【错误】由于上游仓库的 workflow 文件发生变更，GitHub 出于安全原因，已自动暂停本次定时同步。"
+          echo "你需要手动执行一次同步上游代码流程操作才能恢复。"
+          exit 1
