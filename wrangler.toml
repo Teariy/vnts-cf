@@ -1,0 +1,57 @@
+name = "vnts-cf"
+main = "src/worker.js"
+compatibility_date = "2023-10-30"
+  
+[vars]
+# 连接后缀：防止别人连接使用输入正确的后缀才能连接 ，用法 -s wss://域名/后缀
+WS_PATH = "vnt"
+
+# 默认网关地址（如果客户端未指定虚拟IP，将分配这个网段的，客户端可以指定任意网段）
+GATEWAY = "10.26.0.1"
+
+# 子网掩码配置
+NETMASK = "255.255.255.0"
+
+# Token白名单，多个token用逗号分隔（填写后将只接受指定的token才可以连接注册）例如：token1,token2,token3 
+WHITE_TOKEN = ""
+
+# 服务器网关显示名称  
+GATEWAY_NAME = "服务器"
+
+# 客户端服务端加密（Cloudflare Workers 的 Web Crypto API 不支持 RSAES-PKCS1-v1_5 算法，请勿开启！）
+SERVER_ENCRYPT = "false"
+  
+# 是否禁用中继转发： 0 允许中继  1 仅P2P
+DISABLE_RELAY = "0"
+
+# 心跳检查间隔时间，检查客户端已经断开的连接进行清理(频率较高)单位：秒
+HEARTBEAT_INTERVAL = "120"
+
+# 健康检查间隔时间，检查所有已经断开的连接进行清理（频率较低）单位：秒
+HEALTH_CHECK_INTERVAL = "3600"
+
+# 每分钟请求限制（/room 和 /test 端点）  
+RATE_LIMIT_PER_MINUTE = "30"
+
+# 缓存保存间隔（秒），用于 Alarm 定时保存组网token数据到storage，防止重新部署丢失
+CACHE_SAVE_INTERVAL = "3600"
+
+# 日志等级 error warn info debug
+LOG_LEVEL = "info"
+
+# 日志存储密码，不为空时启用日志存储功能 /log ，开启后会消耗durable_objects免费额度，谨慎开启  
+LOG_PASSWORD = ""
+
+# Durable Object 地理位置提示，优化延迟（apac=亚太 weur=西欧 enam=北美东部 wnam=北美西部等）
+LOCATION_HINT = "apac"
+  
+[[durable_objects.bindings]]
+# Durable Objects 绑定配置
+name = "RELAY_ROOM"
+class_name = "RelayRoom"
+  
+[[migrations]]
+# Durable Objects 的数据库迁移版本
+tag = "v1"
+new_sqlite_classes = ["RelayRoom"]
+
